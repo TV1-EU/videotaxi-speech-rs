@@ -2,7 +2,7 @@
 
 This is a Rust library for interacting with the VIDEO.TAXI Speech API.
 
-An example implementation can be found in the `examples` directory.
+An example implementation can be found in the `src/example` directory.
 
 ## Requirements
 

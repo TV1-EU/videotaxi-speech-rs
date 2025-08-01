@@ -3,6 +3,10 @@ name = "videotaxi-speech-rs"
 version = "0.1.0"
 edition = "2024"
 
+[lib]
+name = "videotaxi_speech_rs"
+path = "src/lib.rs"
+
 [dependencies]
 base64 = "0.22.1"
 bytes = "1.10.1"
