@@ -2,7 +2,11 @@
 
 This is a Rust library for interacting with the VIDEO.TAXI Speech API.
 
-An example implementation can be found in the `src/example` directory.
+An example implementation can be found in the `src/example` directory. You can run this example easily with the following command:
+
+```bash
+ffmpeg -f alsa -i default -ac 2 -f adts -  | VIDEOTAXI_TOKEN=INSERT_ME cargo run --example basic
+```
 
 ## Requirements
 
@@ -14,7 +18,7 @@ An example implementation can be found in the `src/example` directory.
 ## Installation
 
 ```bash
-cargo install https://github.com/TV1-EU/videotaxi-speech-rs
+cargo install --git https://github.com/TV1-EU/videotaxi-speech-rs
 ```
 
 

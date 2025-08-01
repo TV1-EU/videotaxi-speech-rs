@@ -1,12 +1,12 @@
 use tokio::io::AsyncReadExt;
-use videotaxi_speech_rs::{SessionConfig, VideoTaxiClient};
+use videotaxi_speech_rs::{
+    AudioSender, EventReceiver, SessionConfig, VideoTaxiClient, VideoTaxiSession,
+};
 
 /// Example usage:
 /// ffmpeg -f alsa -i default -ac 2 -f adts -  | VIDEOTAXI_TOKEN=<insert_token> cargo run
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    tracing_subscriber::fmt::init();
-
     // can set two env vars:
     // - VIDEOTAXI_TOKEN (mandatory)
     // - VIDEOTAXI_URL (optional)
@@ -22,11 +22,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
 
     // Create session: provisions the required VIDEO.TAXI Resources and fetches the session details
-    let session = client.create_session(&config).await?;
+    let session: VideoTaxiSession = client.create_session(&config).await?;
 
     // Connect audio sender and event receiver
-    let mut audio_sender = session.connect_audio_sender().await?;
-    let mut event_receiver = session.connect_event_receiver().await?;
+    let mut audio_sender: AudioSender = session.connect_audio_sender().await?;
+    let mut event_receiver: EventReceiver = session.connect_event_receiver().await?;
 
     // Spawn task to send audio from stdin (we pipe encoded frames into stdin)
     let audio_task = tokio::spawn(async move {
