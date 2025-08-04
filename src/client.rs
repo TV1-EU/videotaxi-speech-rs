@@ -3,6 +3,7 @@ use futures_util::{SinkExt, StreamExt};
 use reqwest::Client as HttpClient;
 use serde_json::{Value, json};
 use tokio::sync::mpsc;
+use tokio::time::{Duration, sleep};
 use tokio_tungstenite::{MaybeTlsStream, WebSocketStream, connect_async, tungstenite::Message};
 use tracing::{debug, error, info, warn};
 
@@ -127,6 +128,7 @@ impl VideoTaxiClient {
     }
 }
 
+#[derive(Debug, Clone)]
 pub struct VideoTaxiSession {
     pub session_id: String,
     pub master_socket_url: String,
@@ -144,11 +146,51 @@ impl VideoTaxiSession {
     }
 
     pub async fn connect_event_receiver(&self) -> Result<EventReceiver> {
-        info!("Connecting to viewer socket: {}", self.viewer_socket_url);
-        let (ws_stream, _) = connect_async(&self.viewer_socket_url).await?;
-        info!("Connected to viewer socket");
+        self.connect_event_receiver_with_retry(30, Duration::from_secs(2))
+            .await
+    }
 
-        Ok(EventReceiver::new(ws_stream))
+    pub async fn connect_event_receiver_with_retry(
+        &self,
+        max_attempts: u32,
+        retry_delay: Duration,
+    ) -> Result<EventReceiver> {
+        let mut attempts = 0;
+
+        loop {
+            attempts += 1;
+
+            info!(
+                "Attempting to connect to viewer socket (attempt {}/{}): {}",
+                attempts, max_attempts, self.viewer_socket_url
+            );
+
+            match connect_async(&self.viewer_socket_url).await {
+                Ok((ws_stream, _)) => {
+                    info!(
+                        "Successfully connected to viewer socket on attempt {}",
+                        attempts
+                    );
+                    return Ok(EventReceiver::new(ws_stream));
+                }
+                Err(e) => {
+                    if attempts >= max_attempts {
+                        error!(
+                            "Failed to connect to viewer socket after {} attempts. Last error: {}",
+                            max_attempts, e
+                        );
+                        return Err(SpeechApiError::WebSocketError(e));
+                    }
+
+                    warn!(
+                        "Failed to connect to viewer socket (attempt {}): {}. Retrying in {:?}...",
+                        attempts, e, retry_delay
+                    );
+
+                    sleep(retry_delay).await;
+                }
+            }
+        }
     }
 }
 

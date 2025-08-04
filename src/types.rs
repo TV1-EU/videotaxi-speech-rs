@@ -5,6 +5,8 @@ pub struct SessionConfig {
     pub session_name: String,
     pub translation_languages: Vec<String>,
     pub master_language: String,
+    /// Language of the translations that should be fetched in the viewer socket.
+    /// **Must** be one of the translation_languages
     pub viewer_language: String,
     pub enable_voiceover: bool,
     // pub remove_disfluencies: bool,
